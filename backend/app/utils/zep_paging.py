@@ -13,6 +13,7 @@ from typing import Any
 
 from zep_cloud import InternalServerError
 from zep_cloud.client import Zep
+from zep_cloud.core.api_error import ApiError
 
 from .logger import get_logger
 
@@ -22,6 +23,8 @@ _DEFAULT_PAGE_SIZE = 100
 _MAX_NODES = 2000
 _DEFAULT_MAX_RETRIES = 3
 _DEFAULT_RETRY_DELAY = 2.0  # seconds, doubles each retry
+_RATE_LIMIT_MAX_RETRIES = 5
+_RATE_LIMIT_DEFAULT_WAIT = 60  # seconds, used if retry-after header is missing
 
 
 def _fetch_page_with_retry(
@@ -32,16 +35,33 @@ def _fetch_page_with_retry(
     page_description: str = "page",
     **kwargs: Any,
 ) -> list[Any]:
-    """single page request,Exponential backoff retry on failure.Retry network only/IOClass transient error."""
+    """Single page request with exponential backoff retry on transient/rate-limit errors."""
     if max_retries < 1:
         raise ValueError("max_retries must be >= 1")
 
     last_exception: Exception | None = None
     delay = retry_delay
+    rate_limit_attempts = 0
 
     for attempt in range(max_retries):
         try:
             return api_call(*args, **kwargs)
+        except ApiError as e:
+            if e.status_code == 429 and rate_limit_attempts < _RATE_LIMIT_MAX_RETRIES:
+                rate_limit_attempts += 1
+                wait = _RATE_LIMIT_DEFAULT_WAIT
+                if e.headers and e.headers.get("retry-after"):
+                    try:
+                        wait = int(e.headers["retry-after"])
+                    except (ValueError, TypeError):
+                        pass
+                logger.warning(
+                    f"Zep {page_description} rate limited (attempt {rate_limit_attempts}/{_RATE_LIMIT_MAX_RETRIES}), "
+                    f"waiting {wait}s before retry..."
+                )
+                time.sleep(wait)
+                continue
+            raise
         except (ConnectionError, TimeoutError, OSError, InternalServerError) as e:
             last_exception = e
             if attempt < max_retries - 1:

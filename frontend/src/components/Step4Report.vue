@@ -136,6 +136,17 @@
             </svg>
           </button>
 
+          <!-- Error state with retry -->
+          <div v-if="isFailed" class="report-error-banner">
+            <div class="error-message">
+              <span class="error-icon">!</span>
+              <span>Report generation failed: {{ failError }}</span>
+            </div>
+            <button class="retry-btn" :disabled="isRetrying" @click="retryReport">
+              {{ isRetrying ? 'Retrying...' : 'Retry Report Generation' }}
+            </button>
+          </div>
+
           <div class="workflow-divider"></div>
         </div>
 
@@ -392,7 +403,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, h, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAgentLog, getConsoleLog } from '../api/report'
+import { getAgentLog, getConsoleLog, generateReport } from '../api/report'
 
 const router = useRouter()
 
@@ -411,6 +422,25 @@ const goToInteraction = () => {
   }
 }
 
+// Retry failed report
+const retryReport = async () => {
+  if (!props.simulationId || isRetrying.value) return
+  isRetrying.value = true
+  try {
+    const res = await generateReport({
+      simulation_id: props.simulationId,
+      force_regenerate: true
+    })
+    if (res.success && res.data?.report_id) {
+      router.push({ name: 'Report', params: { reportId: res.data.report_id } })
+    }
+  } catch (err) {
+    console.error('Retry failed:', err)
+  } finally {
+    isRetrying.value = false
+  }
+}
+
 // State
 const agentLogs = ref([])
 const consoleLogs = ref([])
@@ -423,6 +453,9 @@ const expandedContent = ref(new Set())
 const expandedLogs = ref(new Set())
 const collapsedSections = ref(new Set())
 const isComplete = ref(false)
+const isFailed = ref(false)
+const failError = ref('')
+const isRetrying = ref(false)
 const startTime = ref(null)
 const leftPanel = ref(null)
 const rightPanel = ref(null)
@@ -2000,7 +2033,8 @@ const getActionLabel = (action) => {
     'tool_call': 'Tool Call',
     'tool_result': 'Tool Result',
     'llm_response': 'LLM Response',
-    'report_complete': 'Complete'
+    'report_complete': 'Complete',
+    'error': 'Error'
   }
   return labels[action] || action
 }
@@ -2049,10 +2083,17 @@ const fetchAgentLog = async () => {
           
           if (log.action === 'report_complete') {
             isComplete.value = true
-            currentSectionIndex.value = null  // Make sure to clear loading state
+            currentSectionIndex.value = null
             emit('update-status', 'completed')
             stopPolling()
-            // The scrolling logic is unified after the loop ends nextTick medium processing
+          }
+
+          if (log.action === 'error' && log.stage === 'failed') {
+            isFailed.value = true
+            failError.value = log.details?.error || 'Unknown error'
+            currentSectionIndex.value = null
+            emit('update-status', 'failed')
+            stopPolling()
           }
           
           if (log.action === 'report_start') {
@@ -3425,6 +3466,60 @@ watch(() => props.reportId, (newId) => {
 
 .next-step-btn:hover svg {
   transform: translateX(4px);
+}
+
+/* Error banner */
+.report-error-banner {
+  margin: 8px 20px 0 20px;
+  padding: 16px;
+  background: #1C1012;
+  border: 1px solid #EF5350;
+  border-radius: 8px;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #EF5350;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #EF5350;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.retry-btn {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFF;
+  background: #EF5350;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-btn:hover:not(:disabled) {
+  background: #F44336;
+}
+
+.retry-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Workflow Empty */
