@@ -658,7 +658,7 @@ class OasisProfileGenerator:
     
     def _get_system_prompt(self, is_individual: bool) -> str:
         """Get system prompt words"""
-        base_prompt = "You are an expert in generating social media personas.Generate detailed,Real characters are used for public opinion simulation,Restore existing reality to the greatest extent possible.Must return a validJSONFormat,All string values ​​cannot contain unescaped newlines.Use Chinese."
+        base_prompt = "You are an expert in generating social media personas. Generate detailed, realistic characters for public opinion simulation. Restore existing reality to the greatest extent possible. Must return valid JSON. All string values cannot contain unescaped newlines."
         return base_prompt
     
     def _build_individual_persona_prompt(
@@ -698,16 +698,16 @@ Please generateJSON,Contains the following fields:
 3. age: age number(Must be an integer)
 4. gender: gender,Must be in English: "male" or "female"
 5. mbti: MBTItype(likeINTJ,ENFPwait)
-6. country: nation(Use Chinese,like"China")
-7. profession: Profession
+6. country: country name
+7. profession: profession
 8. interested_topics: array of interesting topics
 
-important:
-- All field values ​​must be strings or numbers,Don't use newline characters
-- personaMust be a coherent text description
-- Use Chinese(Apart fromgenderFields must be in Englishmale/female)
+Important:
+- All field values must be strings or numbers, no newline characters
+- persona must be a coherent text description
+- gender must be "male" or "female"
 - Content should be consistent with entity information
-- ageMust be a valid integer,gendermust be"male"or"female"
+- age must be a valid integer
 """
 
     def _build_group_persona_prompt(
@@ -747,16 +747,15 @@ Please generateJSON,Contains the following fields:
 3. age: Fixed filling30(Virtual age of organization account)
 4. gender: Fixed filling"other"(Institutional account useothermeans impersonal)
 5. mbti: MBTItype,Used to describe account style,likeISTJRepresents strictness and conservatism
-6. country: nation(Use Chinese,like"China")
-7. profession: Organizational Function Description
+6. country: country name
+7. profession: organizational function description
 8. interested_topics: array of areas of concern
 
-important:
-- All field values ​​must be strings or numbers,not allowednullvalue
-- personaMust be a coherent text description,Don't use newline characters
-- Use Chinese(Apart fromgenderFields must be in English"other")
-- ageMust be an integer30,genderMust be a string"other"
-- Speeches from institutional accounts must conform to their identity and positioning"""
+Important:
+- All field values must be strings or numbers, no null values
+- persona must be a coherent text description, no newline characters
+- age must be integer 30, gender must be string "other"
+- Statements from institutional accounts must conform to their identity and positioning"""
     
     def _generate_profile_rule_based(
         self,
@@ -1112,7 +1111,7 @@ important:
         
         gender_lower = gender.lower().strip()
         
-        # Chinese mapping
+        # Gender normalization
         gender_map = {
             "male": "male",
             "female": "female",

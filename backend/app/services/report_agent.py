@@ -651,12 +651,11 @@ your task is:
      > "Some people will say:Original content..."
    - These citations are core evidence for simulation predictions
 
-3. [language consistency - Quotes must be translated into the reporting language]
-   - The content returned by the tool may contain expressions in English or a mixture of Chinese and English
-   - If the original text of the simulation requirements and materials is in Chinese,The report must be entirely written in Chinese
-   - When you quote English or Chinese-English mixed content returned by the tool,It must be translated into fluent Chinese before writing the report
-   - Keep the original meaning unchanged when translating,Make sure your expressions are natural and smooth
-   - This rule applies to both text and quotation blocks(> Format)content in
+3. [Language consistency - Quotes must match the report language]
+   - The content returned by the tool may contain mixed-language expressions
+   - The report should be written in the same language as the simulation requirements and source materials
+   - When quoting tool content in a different language, translate it naturally while preserving the original meaning
+   - This rule applies to both inline text and quotation blocks (> format)
 
 4. [Faithfully present prediction results]
    - Report content must reflect simulation results that represent the future in a simulated world

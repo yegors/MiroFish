@@ -26,7 +26,7 @@ from .zep_entity_reader import EntityNode, ZepEntityReader
 
 logger = get_logger('mirofish.simulation_config')
 
-# Chinese daily routine time configuration (Beijing time)
+# Default daily routine time configuration
 CHINA_TIMEZONE_CONFIG = {
     # Late night (almost no activity)
     "dead_hours": [0, 1, 2, 3, 4, 5],
@@ -83,7 +83,7 @@ class AgentActivityConfig:
 
 @dataclass  
 class TimeSimulationConfig:
-    """Time simulation configuration (based on Chinese daily routines)."""
+    """Time simulation configuration (based on realistic daily routines)."""
     # Total simulation time (in simulated hours)
     total_simulation_hours: int = 72  # Default: simulate 72 hours (3 days)
 
@@ -94,7 +94,7 @@ class TimeSimulationConfig:
     agents_per_hour_min: int = 5
     agents_per_hour_max: int = 20
 
-    # Peak hours (evening 19-22, the most active period for Chinese users)
+    # Peak hours (evening 19-22, the most active period for users)
     peak_hours: List[int] = field(default_factory=lambda: [19, 20, 21, 22])
     peak_activity_multiplier: float = 1.5
 
@@ -541,7 +541,7 @@ class SimulationConfigGenerator:
 Return a JSON time configuration.
 
 ### General principles (reference only; adjust to the event and participants):
-- The audience primarily follows China Standard Time routines.
+- The audience primarily follows standard daily routines.
 - Almost no activity from 00:00-05:00 (activity multiplier 0.05).
 - Activity rises from 06:00-08:00 (activity multiplier 0.4).
 - Moderate activity during work hours, 09:00-18:00 (activity multiplier 0.7).
@@ -587,7 +587,7 @@ Field descriptions:
             return self._get_default_time_config(num_entities)
     
     def _get_default_time_config(self, num_entities: int) -> Dict[str, Any]:
-        """Get default time configuration (Chinese daily routine)."""
+        """Get default time configuration (realistic daily routine)."""
         return {
             "total_simulation_hours": 72,
             "minutes_per_round": 60,  # 1 hour per round, speeds up time flow
@@ -832,7 +832,7 @@ Simulation requirements: {simulation_requirement}
 
 ## Task
 Generate activity configuration for each entity. Note:
-- **Times should follow Chinese daily routines**: early morning 0-5 almost inactive, evening 19-22 most active.
+- **Times should follow realistic daily routines**: early morning 0-5 almost inactive, evening 19-22 most active.
 - **Official agencies** (University/Government Agency): Low activity (0.1-0.3), active during work hours (9-17), slow response (60-240 min), high influence (2.5-3.0).
 - **Media** (MediaOutlet): Active (0.4-0.6), all-day activity (8-23), fast response (5-30 min), high influence (2.0-2.5).
 - **Individuals** (Student/Person/Alumni): High activity (0.6-0.9), mainly active in the evening (18-23), fast response (1-15 min), low influence (0.8-1.2).
@@ -846,7 +846,7 @@ Return JSON only (no markdown):
             "activity_level": <0.0-1.0>,
             "posts_per_hour": <Post frequency>,
             "comments_per_hour": <Comment frequency>,
-            "active_hours": [<Active hours list, following Chinese daily routines>],
+            "active_hours": [<Active hours list, following realistic daily routines>],
             "response_delay_min": <Minimum response delay in minutes>,
             "response_delay_max": <Maximum response delay in minutes>,
             "sentiment_bias": <-1.0 to 1.0>,
@@ -857,7 +857,7 @@ Return JSON only (no markdown):
     ]
 }}"""
 
-        system_prompt = "You are an expert in social media behavior analysis. Return pure JSON only. The configuration must follow Chinese daily routines."
+        system_prompt = "You are an expert in social media behavior analysis. Return pure JSON only. The configuration must follow realistic daily routines."
         
         try:
             result = self._call_llm_with_retry(prompt, system_prompt)
@@ -896,7 +896,7 @@ Return JSON only (no markdown):
         return configs
     
     def _generate_agent_config_by_rule(self, entity: EntityNode) -> Dict[str, Any]:
-        """Generate a single based on rulesAgentConfiguration(Chinese people's daily routine)"""
+        """Generate a single rule-based agent configuration (realistic daily routine)."""
         entity_type = (entity.get_entity_type() or "Unknown").lower()
         
         if entity_type in ["university", "governmentagency", "ngo"]:

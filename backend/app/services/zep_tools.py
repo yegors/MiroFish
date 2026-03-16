@@ -1440,7 +1440,7 @@ returnJSONList of sub-questions in format."""
                 meaningful.sort(key=len, reverse=True)
                 key_quotes = [s + "." for s in meaningful[:3]]
 
-                # Strategy2(Replenish): Correctly paired Chinese quotes""Inner text
+                # Strategy 2 (fallback): Extract text from paired quotation marks
                 if not key_quotes:
                     paired = re.findall(r'\u201c([^\u201c\u201d]{15,100})\u201d', clean_text)
                     paired += re.findall(r'\u300c([^\u300c\u300d]{15,100})\u300d', clean_text)
@@ -1707,7 +1707,7 @@ format constraints(Must comply with):
 - Use plain text paragraphs,Separate different parts with blank lines
 - Do not useMarkdowntitle(like#,##,###)
 - Don't use dividing lines(like---,***)
-- Use Chinese quotation marks when quoting the interviewee’s original words""
+- Use quotation marks when quoting the interviewee’s original words
 - Can be used**Bold**Mark keywords,but don't use otherMarkdowngrammar"""
 
         user_prompt = f"""Interview topics:{interview_requirement}

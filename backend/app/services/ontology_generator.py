@@ -66,7 +66,7 @@ Please outputJSONFormat,Contains the following structure:
             "attributes": []
         }
     ],
-    "analysis_summary": "A brief analysis of the content of the text(Chinese)"
+    "analysis_summary": "A brief analysis of the content of the text"
 }
 ```
 
